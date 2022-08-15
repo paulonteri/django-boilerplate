@@ -1,0 +1,34 @@
+name: Docker Image to DockerHub
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set RELEASE_VERSION
+      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+    - uses: satackey/action-docker-layer-caching@v0.0.11
+      continue-on-error: true
+
+    - name: DockerHub Login
+      env:
+        DOCKER_USER: ${{secrets.DOCKER_USER}}
+        DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+      run: |
+        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+    - name: Build the Docker Image
+      run: docker build . --file Dockerfile -t onteri/django-api-boilerplate:${{ env.RELEASE_VERSION }} -t onteri/django-api-boilerplate:latest
+
+    - name: Docker Push
+      run: docker push onteri/django-api-boilerplate --all-tags

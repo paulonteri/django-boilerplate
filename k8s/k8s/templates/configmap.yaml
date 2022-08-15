@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    namespace: {{ .Values.nameSpace }}
+    name: {{ .Values.configMap.name }}
+data:
+    {{- if .Values.postgres.enabled }}
+    DB_HOST: {{ .Values.pgbouncer.name }}-service
+    {{ else }}
+    DB_HOST: {{ .Values.env.EXTERNAL_DB_HOST }}
+    {{ end }}
+    REDIS_DB_URL: redis://{{ .Values.redis.name }}-service
+    CELERY_BROKER_URL: redis://{{ .Values.redis.name }}-service
+    CELERY_RESULT_BACKEND: redis://{{ .Values.redis.name }}-service
+    CACHE_HOST: redis://{{ .Values.redis.name }}-service

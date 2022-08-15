@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    namespace: {{ .Values.nameSpace }}
+    name: {{ .Values.redis.name }}
+    labels:
+        {{- include "k8s.labels" . | nindent 8 }}
+spec:
+    selector:
+        matchLabels:
+            pod: {{ .Values.redis.name }}
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                pod: {{ .Values.redis.name }}
+        spec:
+            containers:
+                - name: master
+                  image: redis
+                  resources:
+                      requests:
+                          cpu: 50m
+                          memory: 50Mi
+                  ports:
+                      - containerPort: 6379
+                  volumeMounts:
+                      - mountPath: /data
+                        name: redis-dump
+            volumes:
+                - name: redis-dump
+                  persistentVolumeClaim:
+                      claimName: {{ .Values.redis.name }}-{{ .Values.nameSpace }}-p-v-c

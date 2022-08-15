@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    namespace: {{ .Values.nameSpace }}
+    name: {{ .Values.djangoCelery.flower.name }}
+    labels:
+        deployment: {{ .Values.djangoCelery.flower.name }}
+        {{- include "k8s.labels" . | nindent 8 }}
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            pod: {{ .Values.djangoCelery.flower.name }}-pod
+    template:
+        metadata:
+            labels:
+                pod: {{ .Values.djangoCelery.flower.name }}-pod
+        spec:
+            containers:
+                - name: flower
+                  image: {{ .Values.django.container.name}}
+                  command:
+                      [
+                          "celery",
+                          "-A",
+                          "backend",
+                          "flower",
+                          "-l",
+                          "info",
+                          "--persistent=True",
+                          "--db=flower_db/flower.db",
+                      ]
+                  ports:
+                      - containerPort: 5555
+                  startupProbe:
+                      httpGet:
+                          path: /dashboard
+                          port: 5555
+                      initialDelaySeconds: 60
+                      timeoutSeconds: 5
+                  resources:
+                        requests:
+                            cpu: "100m"
+                            memory: "100Mi"
+                  env:          
+                    {{- range $key, $val := .Values.env }}
+                      - name: {{ $key }}
+                        value: {{ $val | quote }}
+                    {{- end }}
+                  envFrom:
+                      - configMapRef:
+                            name: {{ .Values.configMap.name}}
+                  resources:
+                      limits:
+                          cpu: 100m
+                  volumeMounts:
+                      - mountPath: /code/flower_db
+                        name: flw-db
+            volumes:
+                - name: flw-db
+                  persistentVolumeClaim:
+                      claimName: {{ .Values.djangoCelery.flower.name }}-{{ .Values.nameSpace }}-p-v-c

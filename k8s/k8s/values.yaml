@@ -1,0 +1,86 @@
+nameSpace: dab
+
+########################################################################################
+
+serviceAccount:
+    # Specifies whether a service account should be created
+    created: false
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name:
+
+imagePullSecrets: []
+
+########################################################################################
+
+defaultServiceExposure: ClusterIP # NodePort/ClusterIP
+
+volumes:
+    enabled: false
+
+ingress:
+    enabled: true
+
+loadbalancers:
+    enabled: true
+
+########################################################################################
+
+configMap:
+    name: prod-env-configmap
+
+secrets:
+    name: prod-env-secrets
+
+postgres:
+    name: postgres
+    enabled: true
+
+pgbouncer:
+    name: pgbouncer
+
+redis:
+    name: redis
+
+djangoMigrationsJob:
+    name: django-migrations
+
+djangoCelery:
+    beat:
+        name: celery-beat
+    workerDefault:
+        name: celery-worker-default
+    flower:
+        name: celery-flower
+
+djangoCore:
+    name: django-core
+
+django:
+    container:
+        name: registry.hub.docker.com/onteri/django-api-boilerplate:latest
+
+########################################################################################
+
+env:
+    DEBUG: True
+    DJANGO_SETTINGS_MODULE: backend.settings.development
+    SECRET_KEY: S0VZS0VZS0VZS0VZS0VZS0VZ
+    ALLOWED_HOSTS: "*,one,two,paulonteri.com"
+    CACHE_MINUTES: 10080
+    CACHE_MINUTES_LONGER: 87600
+    CACHE_PORT: 6379
+    CACHE_PASSWORD: ""
+    CORS_ORIGIN_WHITELIST: ""
+    # DB_HOST: postgres # set in configmap
+    EXTERNAL_DB_HOST: ""
+    DB_NAME: postgres
+    DB_PASSWORD: postgres
+    DB_USER: postgres
+    GS_BUCKET_NAME: ""
+    GS_LOCATION: ""
+    GS_SERVICE_ACC: ""
+    # SENTRY_DSN: ""
+    # SENTRY_ENVIRONMENT: ""

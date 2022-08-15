@@ -1,0 +1,19 @@
+{{- if .Values.volumes.enabled }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    namespace: {{ .Values.nameSpace }}
+    name: {{ .Values.redis.name }}-{{ .Values.nameSpace }}-p-v
+    labels:
+        name: {{ .Values.redis.name }}-{{ .Values.nameSpace }}-p-v
+        {{- include "k8s.labels" . | nindent 8 }}
+spec:
+    capacity:
+        storage: 1Gi
+    accessModes:
+        - ReadWriteOnce
+    persistentVolumeReclaimPolicy: Retain
+    gcePersistentDisk:
+        pdName: {{ .Values.redis.name }}-{{ .Values.nameSpace }}-p-v
+        fsType: ext4
+{{- end }}

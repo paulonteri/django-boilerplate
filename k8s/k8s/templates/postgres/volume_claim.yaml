@@ -1,0 +1,16 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    namespace: {{ .Values.nameSpace }}
+    name: {{ .Values.postgres.name }}-{{ .Values.nameSpace }}-p-v-c
+    labels:
+        name: {{ .Values.postgres.name }}-{{ .Values.nameSpace }}-p-v-c
+        {{- include "k8s.labels" . | nindent 8 }}
+spec:
+    accessModes:
+        - ReadWriteOnce
+    resources:
+        requests:
+            storage: 1Gi
+{{- end }}

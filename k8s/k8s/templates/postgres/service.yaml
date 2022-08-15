@@ -1,0 +1,18 @@
+{{- if .Values.postgres.enabled }}
+kind: Service
+apiVersion: v1
+metadata:
+    namespace: {{ .Values.nameSpace }}
+    name: {{ .Values.postgres.name }}-service
+    labels:
+        {{- include "k8s.labels" . | nindent 8 }}
+spec:
+    selector:
+        app: {{ .Values.postgres.name }}-container
+    ports:
+        - protocol: TCP
+          port: 5432
+          targetPort: 5432
+    type: {{ .Values.defaultServiceExposure }}
+    # type: NodePort
+{{- end }}

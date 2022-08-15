@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    namespace: {{ .Values.nameSpace }}
+    name: {{ .Values.djangoCore.name }}
+    labels:
+        app: {{ .Values.djangoCore.name }}
+        {{- include "k8s.labels" . | nindent 8 }}
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            pod: {{ .Values.djangoCore.name }}-pod
+    template:
+        metadata:
+            labels:
+                pod: {{ .Values.djangoCore.name }}-pod
+        spec:
+            containers:
+                - name: django
+                  image: {{ .Values.django.container.name}}
+                  command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+                  ports:
+                      - containerPort: 8000
+                  startupProbe:
+                      httpGet:
+                          path: /admin
+                          port: 8000
+                      initialDelaySeconds: 10
+                      timeoutSeconds: 5
+                  resources:
+                        requests:
+                            cpu: "100m"
+                            memory: "150Mi"
+                  env:          
+                    {{- range $key, $val := .Values.env }}
+                      - name: {{ $key }}
+                        value: {{ $val | quote }}
+                    {{- end }}
+                  envFrom:
+                      - configMapRef:
+                            name: {{ .Values.configMap.name}}

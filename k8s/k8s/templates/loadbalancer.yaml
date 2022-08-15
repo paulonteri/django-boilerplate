@@ -1,0 +1,17 @@
+{{- if .Values.loadbalancers.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+    namespace: {{ .Values.nameSpace }}
+    name: default-loadbalancer
+    labels:
+        {{- include "k8s.labels" . | nindent 8 }}
+spec:
+    selector:
+        pod: {{ .Values.djangoCore.name }}-pod
+    ports:
+        - protocol: TCP
+          port: 8000
+          targetPort: 8000
+    type: LoadBalancer
+{{- end }}

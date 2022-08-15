@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    namespace: {{ .Values.nameSpace }}
+    name: {{ .Values.pgbouncer.name }}-deployment
+    labels:
+        {{- include "k8s.labels" . | nindent 8 }}
+spec:
+    revisionHistoryLimit: 10  # removes old replicasets for deployment rollbacks
+    strategy:
+      rollingUpdate:
+        maxUnavailable: 0  # Avoid Terminating and ContainerCreating at the same time
+    replicas: 1
+    selector:
+        matchLabels:
+            app: {{ .Values.pgbouncer.name }}-container
+    template:
+        metadata:
+            labels:
+                app: {{ .Values.pgbouncer.name }}-container
+                tier: backend
+        spec:
+            containers:
+                - name: {{ .Values.pgbouncer.name }}-container
+                  image: edoburu/pgbouncer
+                  resources:
+                        requests:
+                            cpu: "100m"
+                            memory: "100Mi"
+                  env:
+                      - name: DB_HOST
+                        value: {{ .Values.postgres.name }}-service
+                      - name: DB_USER
+                        value: {{ .Values.env.DB_USER }}
+                      - name: DB_PASSWORD
+                        value: {{ .Values.env.DB_PASSWORD }}
+                      - name: DB_NAME
+                        value: {{ .Values.env.DB_NAME }}
+                      - name: POOL_MODE
+                        value: transaction
+                      - name: AUTH_TYPE
+                        value: plain
+                  ports:
+                      - containerPort: 5432
+                  livenessProbe:
+                    tcpSocket:
+                      port: 5432
+                    periodSeconds: 60
+                  lifecycle:
+                    preStop:
+                      exec:
+                        # Allow existing queries clients to complete within 120 seconds
+                        command: ["/bin/sh", "-c", "killall -INT pgbouncer && sleep 120"]

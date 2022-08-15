@@ -1,0 +1,45 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    namespace: {{ .Values.nameSpace }}
+    name: {{ .Values.postgres.name }}-deployment
+    labels:
+        {{- include "k8s.labels" . | nindent 8 }}
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: {{ .Values.postgres.name }}-container
+    template:
+        metadata:
+            labels:
+                app: {{ .Values.postgres.name }}-container
+                tier: backend
+        spec:
+            containers:
+                - name: {{ .Values.postgres.name }}-container
+                  image: postgres:latest
+                  resources:
+                        requests:
+                            cpu: "100m"
+                            memory: "100Mi"
+                  env:
+                      - name: PGDATA
+                        value: '/var/lib/postgresql/data/pgdata'
+                      - name: POSTGRES_USER
+                        value: {{ .Values.env.DB_USER }}
+                      - name: POSTGRES_PASSWORD
+                        value: {{ .Values.env.DB_PASSWORD }}
+                      - name: POSTGRES_DB
+                        value: {{ .Values.env.DB_NAME }}
+                  ports:
+                      - containerPort: 5432
+                  volumeMounts:
+                      - mountPath: /var/lib/postgresql/data
+                        name: pg-data
+            volumes:
+                - name: pg-data
+                  persistentVolumeClaim:
+                      claimName: {{ .Values.postgres.name }}-{{ .Values.nameSpace }}-p-v-c
+{{- end }}

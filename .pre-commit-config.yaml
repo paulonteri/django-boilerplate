@@ -1,0 +1,53 @@
+# .pre-commit-config.yaml
+# https://pre-commit.com
+# https://rohitgupta.xyz/blog/keeping-python-code-clean-with-pre-commit-hooks-black-flake8-and-isort/
+# ========================
+#
+# pre-commit clean
+# pre-commit install
+# pre-commit install-hooks
+#
+# precommit hooks installation
+#
+# - pre-commit autoupdate
+#
+# - pre-commit run black
+#
+# continuous integration
+# ======================
+#
+# - pre-commit run --all-files
+#
+
+files: ^core/
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.2.0
+      hooks:
+          #- id: check-yaml
+          - id: end-of-file-fixer
+          - id: requirements-txt-fixer
+          # - id: no-commit-to-branch
+          #   args: [--branch, master]
+          - id: trailing-whitespace
+    - repo: https://github.com/psf/black
+      rev: 22.3.0
+      hooks:
+          - id: black
+            exclude: "[a-zA-Z]*/(migrations)/(.)*"
+            language_version: python3.9
+    - repo: https://github.com/asottile/seed-isort-config
+      rev: v2.2.0
+      hooks:
+          - id: seed-isort-config
+    - repo: https://github.com/timothycrosley/isort
+      rev: 5.10.1
+      hooks:
+          - id: isort
+            args: ["--profile", "black"]
+    - repo: https://gitlab.com/pycqa/flake8
+      rev: 3.9.2
+      hooks:
+          - id: flake8
+            exclude: "[a-zA-Z]*/(migrations|settings)/(.)*"
+            additional_dependencies: [flake8-bugbear]

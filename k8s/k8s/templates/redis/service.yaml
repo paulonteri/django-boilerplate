@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+    namespace: {{ .Values.nameSpace }}
+    name: {{ .Values.redis.name }}-service
+    labels:
+        {{- include "k8s.labels" . | nindent 8 }}
+spec:
+    selector:
+        pod: {{ .Values.redis.name }}
+    ports:
+        - protocol: TCP
+          port: 6379
+          targetPort: 6379
