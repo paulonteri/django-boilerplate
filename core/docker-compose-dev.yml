@@ -1,0 +1,60 @@
+# extend the docker-compose-services.yml file
+# docker-compose -f docker-compose-services.yml -f docker-compose-dev.yml up --build
+
+version: "3.3"
+
+services:
+  core:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/code
+    env_file:
+      - ./.env
+    ports:
+      - 8000:8000
+    depends_on:
+      - core-redis
+      - core-postgres
+      - core-pgbouncer
+
+  core-celery:
+    build: .
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend worker -l info  --autoscale=10,2 -n workerDefault@%h
+    volumes:
+      - .:/code
+    env_file:
+      - ./.env
+    depends_on:
+      - core # for migrations
+      - core-pgbouncer
+      - core-redis
+
+  core-celery-beat:
+    build: .
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend beat -l info
+    volumes:
+      - .:/code
+    env_file:
+      - ./.env
+    depends_on:
+      - core # for migrations
+      - core-pgbouncer
+      - core-redis
+
+  core-flower:
+    build: .
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend flower -l info --persistent=True --db=flower
+    ports:
+      - "5555:5555"
+    depends_on:
+      - core-celery-beat
+      - core-celery
+      - core-redis
+    volumes:
+      - .:/code
+      - flowerdata:/data
+    env_file:
+      - ./.env
