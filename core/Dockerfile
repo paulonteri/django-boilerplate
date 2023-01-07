@@ -1,6 +1,6 @@
 # A well-written custom Dockerfile should respect this layering to make the most out of caching.
 #   Whatever is on top of the Dockerfile should change the least, and on the bottom—the most.
-FROM python:3.7-slim
+FROM python:3.9
 
 # The environment variable ensures that the python output is set straight
 # to the terminal without buffering it first
@@ -9,15 +9,16 @@ ENV PYTHONUNBUFFERED 1
 # which apart from being useless in our use-case, can also lead to few hard-to-find bugs.
 ENV PYTHONDONTWRITEBYTECODE 1
 
-RUN pip install --upgrade pip
-
-RUN pip install --no-cache-dir wheel
-
 RUN mkdir /code
 WORKDIR /code
-COPY . /code/
 
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir wheel
+
+COPY ./requirements.txt /code/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /code/
 
 RUN python manage.py collectstatic --verbosity 0 --noinput --clear
 
